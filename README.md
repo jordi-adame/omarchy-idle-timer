@@ -51,7 +51,8 @@ omarchy-shell io.github.jordi-adame.idle-timer toggle   # also open, close
 omarchy-shell io.github.jordi-adame.idle-timer set 300 600   # screensaver, lock in seconds
 ```
 
-`set` keeps lock >= screensaver too.
+`set` keeps lock >= screensaver too; `0` turns that action off. It answers
+`ok`, or an error for negative or fractional seconds.
 
 ## Known limits
 

@@ -101,7 +101,12 @@ Panel {
     function open(): void { root.open() }
     function close(): void { root.close() }
     function toggle(): void { root.toggle() }
-    function set(screensaver: int, lock: int): void { root.save(screensaver, Math.max(screensaver, lock)) }
+    function set(screensaver: int, lock: int): string {
+      var values = Model.forSet(screensaver, lock)
+      if (!values) return "error: seconds must be whole numbers, 0 or more"
+      root.applyValues(values)
+      return "ok"
+    }
   }
 
   BarIconButton {

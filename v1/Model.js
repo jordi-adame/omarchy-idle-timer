@@ -64,6 +64,14 @@ function withLock(seconds, screensaver) {
   return { screensaver: Math.min(screensaver, seconds), lock: seconds }
 }
 
+// Both values at once (the IPC set call): whole seconds >= 0, 0 being off;
+// null for anything else. The lock moves up to the screensaver unless off.
+function forSet(screensaver, lock) {
+  var valid = function(n) { return typeof n === "number" && Number.isInteger(n) && n >= 0 }
+  if (!valid(screensaver) || !valid(lock)) return null
+  return withScreensaver(screensaver, lock)
+}
+
 // The command that writes both values through Omarchy's own shell.json
 // helper (omarchy-shell-config's commit: jq, tmp file, rename, shell reload).
 // The values are positional arguments ($1, $2) handed to jq with --argjson,
@@ -98,6 +106,7 @@ if (typeof module !== "undefined") {
     label: label,
     withScreensaver: withScreensaver,
     withLock: withLock,
+    forSet: forSet,
     saveCommand: saveCommand
   }
 }

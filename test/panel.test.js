@@ -152,3 +152,19 @@ test("off: a lock that is off stays off when the screensaver moves", { skip }, (
   assert.equal(r.labels.LOCK, "Off")
   assert.deepEqual(r.started, [Model.saveCommand(600, 0)])
 })
+
+test("ipc: set writes the values, keeps lock >= screensaver and refuses bad ones", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 300 }), `
+    var ipc = null
+    for (var i = 0; i < panel.resources.length; i++)
+      if (panel.resources[i].target === "io.github.jordi-adame.idle-timer") ipc = panel.resources[i]
+    var bad = ipc.set(-5, 10)
+    var startedAfterBad = Recorder.started.length
+    var ok = ipc.set(900, 600)
+    done({ bad: bad, ok: ok, startedAfterBad: startedAfterBad, state: state() })`)
+  assert.match(r.bad, /^error/)
+  assert.equal(r.startedAfterBad, 0)
+  assert.equal(r.ok, "ok")
+  assert.deepEqual(r.state.started, [Model.saveCommand(900, 900)])
+  assert.deepEqual(r.state.labels, { SCREENSAVER: "15 min", LOCK: "15 min" })
+})

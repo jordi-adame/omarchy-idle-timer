@@ -152,3 +152,17 @@ test("off: a new screensaver leaves a lock that is off, off", () => {
 test("off: a new lock leaves a screensaver that is off, off", () => {
   assert.deepEqual(Model.withLock(600, 0), { screensaver: 0, lock: 600 })
 })
+
+test("forSet: keeps lock >= screensaver, and 0 as off", () => {
+  assert.deepEqual(Model.forSet(300, 600), { screensaver: 300, lock: 600 })
+  assert.deepEqual(Model.forSet(600, 300), { screensaver: 600, lock: 600 })
+  assert.deepEqual(Model.forSet(0, 300), { screensaver: 0, lock: 300 })
+  assert.deepEqual(Model.forSet(300, 0), { screensaver: 300, lock: 0 })
+  assert.deepEqual(Model.forSet(0, 0), { screensaver: 0, lock: 0 })
+})
+
+test("forSet: negative or non-integer seconds are refused", () => {
+  for (const [s, l] of [[-5, 10], [10, -1], [1.5, 10], [NaN, 10], ["300", 600], [10, Infinity]]) {
+    assert.equal(Model.forSet(s, l), null, JSON.stringify([s, l]))
+  }
+})
