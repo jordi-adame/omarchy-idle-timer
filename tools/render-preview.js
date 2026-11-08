@@ -1,5 +1,5 @@
-// Renders the popup (both sliders) from the real v1/Panel.qml with the Qt
-// offscreen platform and the stubs in test/stubs, and saves a PNG. No window,
+// Renders the popup (both sliders) from the real Panel.qml the manifest loads,
+// with the Qt offscreen platform and the stubs in test/stubs, and saves a PNG. No window,
 // no compositor; nothing is written or restarted.
 //
 //   TMPDIR=<scratch> node tools/render-preview.js <out.png> [screensaver] [lock]
