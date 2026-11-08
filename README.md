@@ -58,7 +58,8 @@ omarchy-shell io.github.jordi-adame.idle-timer set 300 600   # screensaver, lock
 - Only the stops above. A value between stops, set by hand, shows at the
   nearest stop, and is kept until you move that slider.
 - Each save restarts the idle service, which starts the idle countdown again.
-- A second release while a save is still running is dropped.
+- A release while a save is still running is saved after it; only the last
+  one is kept. A failed save drops it too.
 - English only.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). License: [MIT](LICENSE).

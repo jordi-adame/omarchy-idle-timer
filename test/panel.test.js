@@ -109,12 +109,31 @@ test("restart: a failed write restarts nothing and drops the preview", { skip },
   assert.deepEqual(r.labels, { SCREENSAVER: "2 min 30 s", LOCK: "5 min" })
 })
 
-test("save: a second release while a write runs starts no second process", { skip }, () => {
+test("save: a release while a write runs is saved after it, not dropped", { skip }, () => {
   const r = run(json({ screensaver: 150, lock: 300 }), `
     slider("LOCK").released(stopIndex(600))
     slider("LOCK").released(stopIndex(900))
+    slider("LOCK").released(stopIndex(1200))
+    var during = state()
+    Recorder.processes[0].finish(0)
+    var queued = state()
+    Recorder.processes[0].finish(0)
+    after(400, function () { done({ during: during, after: queued, last: state() }) })`)
+  assert.deepEqual(r.during.started, [Model.saveCommand(150, 600)], "one write at a time")
+  assert.equal(r.during.labels.LOCK, "20 min", "the preview shows the last release")
+  assert.deepEqual(r.after.started, [Model.saveCommand(150, 600), Model.saveCommand(150, 1200)], "then the last release only")
+  assert.deepEqual(r.after.detached, [], "no restart between the two writes")
+  assert.deepEqual(r.last.detached, [Model.RESTART_COMMAND], "one restart after the last")
+})
+
+test("save: a failed write drops the release queued behind it", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 300 }), `
+    slider("LOCK").released(stopIndex(600))
+    slider("LOCK").released(stopIndex(900))
+    Recorder.processes[0].finish(1)
     done(state())`)
   assert.deepEqual(r.started, [Model.saveCommand(150, 600)])
+  assert.equal(r.labels.LOCK, "5 min")
 })
 
 test("off: a screensaver that is off shows Off and stays off when the lock moves", { skip }, () => {

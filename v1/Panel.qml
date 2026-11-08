@@ -30,6 +30,9 @@ Panel {
   property int previewScreensaver: -1
   property int previewLock: -1
 
+  // The last values released while a write was running, written after it.
+  property var pendingSave: null
+
   FileView {
     id: shellConfigFile
     path: Quickshell.env("HOME") + "/.config/omarchy/shell.json"
@@ -38,6 +41,7 @@ Panel {
     onFileChanged: reload()
     onLoaded: {
       root.idleConfig = Model.parseIdle(text())
+      if (root.pendingSave) return
       root.previewScreensaver = -1
       root.previewLock = -1
     }
@@ -48,7 +52,10 @@ Panel {
   function label(seconds) { return Model.label(seconds) }
 
   function save(screensaver, lock) {
-    if (saveProcess.running) return
+    if (saveProcess.running) {
+      pendingSave = { screensaver: screensaver, lock: lock }
+      return
+    }
     saveProcess.command = Model.saveCommand(screensaver, lock)
     saveProcess.running = true
   }
@@ -56,10 +63,15 @@ Panel {
   Process {
     id: saveProcess
     onExited: function(exitCode, exitStatus) {
-      if (exitCode === 0) rearmTimer.restart()
-      else {
+      var next = root.pendingSave
+      root.pendingSave = null
+      if (exitCode !== 0) {
         root.previewScreensaver = -1
         root.previewLock = -1
+      } else if (next) {
+        root.save(next.screensaver, next.lock)
+      } else {
+        rearmTimer.restart()
       }
     }
   }
