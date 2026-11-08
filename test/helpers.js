@@ -35,8 +35,9 @@ const QML = ["/usr/lib/qt6/bin/qml", "/usr/bin/qml6", "/usr/bin/qml"].find((p) =
 
 // Loads Panel.qml against a fake HOME holding `shellJson`, then runs `script`
 // as the body of `function (panel, Recorder, done, after)`; done(value) ends the
-// run and becomes the result. `after(ms, fn)` runs fn later.
-function runPanel({ shellJson = null, script, width = 360, height = 260 }) {
+// run and becomes the result. `after(ms, fn)` runs fn later. `env` adds to
+// the qml process environment (QT_SCALE_FACTOR for the screenshots).
+function runPanel({ shellJson = null, script, width = 360, height = 260, env = {} }) {
   if (!QML) throw new Error("qml runtime not found (qt6-declarative)")
   const home = fakeHome(shellJson)
   const dir = tmpdir("qml")
@@ -103,7 +104,7 @@ ${script}
     env: {
       PATH: process.env.PATH, HOME: home, TMPDIR: dir, LANG: "C.UTF-8",
       QT_QPA_PLATFORM: "offscreen", QT_QUICK_BACKEND: "software", QT_FORCE_STDERR_LOGGING: "1",
-      QML_XHR_ALLOW_FILE_READ: "1"
+      QML_XHR_ALLOW_FILE_READ: "1", ...env
     },
     encoding: "utf8", timeout: 60000
   })
