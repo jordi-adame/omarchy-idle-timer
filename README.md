@@ -41,6 +41,8 @@ first: a screensaver above the lock moves the lock up to it, and a lock below
 the screensaver moves the screensaver down to it.
 
 With no `idle` block, the popup shows Omarchy's defaults: 2 min 30 s and 5 min.
+A timeout of `0` means that action is off, as in Omarchy: the popup shows Off,
+and moving the other slider keeps it off. Moving its own slider turns it on.
 
 ## Command line
 

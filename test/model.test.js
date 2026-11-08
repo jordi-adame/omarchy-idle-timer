@@ -127,3 +127,28 @@ test("restart command: the idle service is toggled off and on only while idle is
   assert.deepEqual(Model.RESTART_COMMAND, ["bash", "-c",
     "omarchy-shell idle status | jq -e '.enabled == true' >/dev/null || exit 0; omarchy-shell idle disable; omarchy-shell idle enable"])
 })
+
+test("off: 0 reads as 0 (Omarchy's 'this action is off'), not as the default", () => {
+  assert.equal(Model.screensaverSeconds({ screensaver: 0 }), 0)
+  assert.equal(Model.lockSeconds({ lock: 0 }), 0)
+})
+
+test("off: values are read the way Omarchy's idle service reads them", () => {
+  // IdleModel.secondsFromConfig: not finite or negative -> default; else floor.
+  assert.equal(Model.screensaverSeconds({ screensaver: -5 }), 150)
+  assert.equal(Model.lockSeconds({ lock: "soon" }), 300)
+  assert.equal(Model.lockSeconds({ lock: "600" }), 600)
+  assert.equal(Model.screensaverSeconds({ screensaver: 90.7 }), 90)
+})
+
+test("off: the label says Off", () => {
+  assert.equal(Model.label(0), "Off")
+})
+
+test("off: a new screensaver leaves a lock that is off, off", () => {
+  assert.deepEqual(Model.withScreensaver(600, 0), { screensaver: 600, lock: 0 })
+})
+
+test("off: a new lock leaves a screensaver that is off, off", () => {
+  assert.deepEqual(Model.withLock(600, 0), { screensaver: 0, lock: 600 })
+})

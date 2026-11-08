@@ -116,3 +116,20 @@ test("save: a second release while a write runs starts no second process", { ski
     done(state())`)
   assert.deepEqual(r.started, [Model.saveCommand(150, 600)])
 })
+
+test("off: a screensaver that is off shows Off and stays off when the lock moves", { skip }, () => {
+  const r = run(json({ screensaver: 0, lock: 600 }), `
+    var before = state()
+    slider("LOCK").released(stopIndex(900))
+    done({ before: before, after: state() })`)
+  assert.equal(r.before.labels.SCREENSAVER, "Off")
+  assert.deepEqual(r.after.started, [Model.saveCommand(0, 900)])
+})
+
+test("off: a lock that is off stays off when the screensaver moves", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 0 }), `
+    slider("SCREENSAVER").released(stopIndex(600))
+    done(state())`)
+  assert.equal(r.labels.LOCK, "Off")
+  assert.deepEqual(r.started, [Model.saveCommand(600, 0)])
+})

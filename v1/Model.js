@@ -20,8 +20,13 @@ function parseIdle(text) {
   }
 }
 
+// Read the way Omarchy's idle service reads it (IdleModel.secondsFromConfig):
+// 0 means that action is off; a missing, non-numeric or negative value means
+// the default.
 function secondsOr(value, fallback) {
-  return Number(value) > 0 ? Number(value) : fallback
+  var n = Number(value)
+  if (!isFinite(n) || n < 0) return fallback
+  return Math.floor(n)
 }
 
 function screensaverSeconds(idle) {
@@ -42,15 +47,17 @@ function indexFor(seconds) {
 }
 
 function label(seconds) {
+  if (seconds === 0) return "Off"
   if (seconds < 60) return seconds + " s"
   if (seconds % 60 === 0) return (seconds / 60) + " min"
   return Math.floor(seconds / 60) + " min " + (seconds % 60) + " s"
 }
 
 // Keep lock >= screensaver so the screensaver always shows first. A new
-// screensaver pushes the lock up; a new lock pulls the screensaver down.
+// screensaver pushes the lock up; a new lock pulls the screensaver down. A
+// value that is off (0) stays off: an action that is off never comes first.
 function withScreensaver(seconds, lock) {
-  return { screensaver: seconds, lock: Math.max(seconds, lock) }
+  return { screensaver: seconds, lock: lock === 0 ? 0 : Math.max(seconds, lock) }
 }
 
 function withLock(seconds, screensaver) {
