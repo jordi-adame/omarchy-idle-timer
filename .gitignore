@@ -1,6 +1,5 @@
 # Node
 node_modules/
-npm-debug.log*
 
 # Scratch files from local test and preview runs (TMPDIR=.scratch)
 .scratch/

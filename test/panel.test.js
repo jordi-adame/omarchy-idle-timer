@@ -18,7 +18,7 @@ function label(title) {
   var row = slider(title).parent
   return row.children[0].children[1].text
 }
-function stopIndex(seconds) { return panel.stops.indexOf(seconds) }
+function stopIndex(seconds) { return ${JSON.stringify(Model.STOPS)}.indexOf(seconds) }
 function state() {
   return {
     screensaver: panel.screensaverSeconds, lock: panel.lockSeconds,

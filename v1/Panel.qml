@@ -18,10 +18,8 @@ Panel {
   // Own the IpcHandler so it can also expose set().
   manageIpc: false
 
-  // Slider positions map to these seconds (Model.STOPS).
-  readonly property var stops: Model.STOPS
-
-  // Omarchy's defaults when shell.json has no idle block (idle service fallbacks).
+  // The idle block of shell.json; the seconds read from it follow Omarchy's
+  // idle service (defaults 150 and 300, 0 for off; see Model.js).
   property var idleConfig: ({})
   readonly property int screensaverSeconds: Model.screensaverSeconds(idleConfig)
   readonly property int lockSeconds: Model.lockSeconds(idleConfig)
@@ -48,9 +46,6 @@ Panel {
     }
     onLoadFailed: function(error) { root.idleConfig = ({}) }
   }
-
-  function indexFor(seconds) { return Model.indexFor(seconds) }
-  function label(seconds) { return Model.label(seconds) }
 
   function save(screensaver, lock) {
     if (saveProcess.running) {
@@ -86,7 +81,8 @@ Panel {
     onTriggered: Quickshell.execDetached(Model.RESTART_COMMAND)
   }
 
-  // Keep lock >= screensaver so the screensaver always shows first.
+  // Preview and save both values; callers keep lock >= screensaver
+  // (Model.withScreensaver, withLock, forSet).
   function applyValues(values) {
     previewScreensaver = values.screensaver
     previewLock = values.lock
@@ -123,7 +119,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: "󰒲"
-    tooltipText: "Screensaver " + root.label(root.screensaverSeconds) + " · Lock " + root.label(root.lockSeconds)
+    tooltipText: "Screensaver " + Model.label(root.screensaverSeconds) + " · Lock " + Model.label(root.lockSeconds)
     onPressed: function(b) { root.toggle() }
   }
 
@@ -198,7 +194,7 @@ Panel {
         anchors.right: parent.right
         anchors.verticalCenter: header.verticalCenter
         textFormat: Text.PlainText
-        text: root.label(row.seconds)
+        text: Model.label(row.seconds)
         color: root.bar.foreground
         font.family: root.bar.fontFamily
         font.pixelSize: Style.font.bodySmall
@@ -210,13 +206,13 @@ Panel {
       bar: root.bar
       width: parent.width
       minimum: 0
-      maximum: root.stops.length - 1
+      maximum: Model.STOPS.length - 1
       step: 1
       integer: true
-      tickCount: root.stops.length
-      value: root.indexFor(row.seconds)
-      onMoved: function(v) { row.preview(root.stops[Math.round(v)]) }
-      onReleased: function(v) { row.commit(root.stops[Math.round(v)]) }
+      tickCount: Model.STOPS.length
+      value: Model.indexFor(row.seconds)
+      onMoved: function(v) { row.preview(Model.STOPS[Math.round(v)]) }
+      onReleased: function(v) { row.commit(Model.STOPS[Math.round(v)]) }
     }
   }
 }
