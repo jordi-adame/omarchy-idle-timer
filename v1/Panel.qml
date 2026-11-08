@@ -92,8 +92,16 @@ Panel {
     save(values.screensaver, values.lock)
   }
 
-  function setScreensaver(seconds) { applyValues(Model.withScreensaver(seconds, lockSeconds)) }
-  function setLock(seconds) { applyValues(Model.withLock(seconds, screensaverSeconds)) }
+  // A release where the slider already was writes nothing, unless a write
+  // is running (then the saved value is about to change).
+  function setScreensaver(seconds) {
+    if (!saveProcess.running && Model.sameStop(seconds, screensaverSeconds)) previewScreensaver = -1
+    else applyValues(Model.withScreensaver(seconds, lockSeconds))
+  }
+  function setLock(seconds) {
+    if (!saveProcess.running && Model.sameStop(seconds, lockSeconds)) previewLock = -1
+    else applyValues(Model.withLock(seconds, screensaverSeconds))
+  }
 
   IpcHandler {
     target: "io.github.jordi-adame.idle-timer"

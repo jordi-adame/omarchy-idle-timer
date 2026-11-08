@@ -166,3 +166,10 @@ test("forSet: negative or non-integer seconds are refused", () => {
     assert.equal(Model.forSet(s, l), null, JSON.stringify([s, l]))
   }
 })
+
+test("sameStop: a release on the stop the value already shows at is no change", () => {
+  assert.equal(Model.sameStop(150, 150), true)
+  assert.equal(Model.sameStop(300, 400), true, "400 shows at the 300 stop")
+  assert.equal(Model.sameStop(600, 400), false)
+  assert.equal(Model.sameStop(15, 0), false, "off shows at the first stop; a release there turns it on")
+})

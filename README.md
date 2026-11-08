@@ -5,7 +5,8 @@ sliders, one for the screensaver timeout and one for the lock timeout.
 
 ![The popup: screensaver 2 min 30 s, lock 5 min](preview.png)
 
-Drag a slider to preview the value; release it to save. The stops run from
+Drag a slider to preview the value; release it to save. A release where the
+slider already was saves nothing. The stops run from
 15 s to 60 min: 15, 30, 45 s, 1, 1.5, 2, 2.5, 3, 5, 10, 15, 20, 30, 45 and 60 min.
 The icon's tooltip shows both values. Esc closes the popup.
 

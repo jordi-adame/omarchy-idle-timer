@@ -168,3 +168,24 @@ test("ipc: set writes the values, keeps lock >= screensaver and refuses bad ones
   assert.deepEqual(r.state.started, [Model.saveCommand(900, 900)])
   assert.deepEqual(r.state.labels, { SCREENSAVER: "15 min", LOCK: "15 min" })
 })
+
+test("save: a release where the slider already was writes nothing", { skip }, () => {
+  const r = run(json({ screensaver: 400, lock: 900 }), `
+    slider("SCREENSAVER").moved(stopIndex(300))
+    slider("SCREENSAVER").released(stopIndex(300))
+    slider("LOCK").released(stopIndex(900))
+    after(400, function () { done(state()) })`)
+  assert.deepEqual(r.started, [])
+  assert.deepEqual(r.detached, [])
+  assert.equal(r.previewScreensaver, -1)
+  assert.deepEqual(r.labels, { SCREENSAVER: "6 min 40 s", LOCK: "15 min" }, "a hand-set 400 s is kept")
+})
+
+test("save: a release back to the saved value while a write runs is still written", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 300 }), `
+    slider("LOCK").released(stopIndex(900))
+    slider("LOCK").released(stopIndex(300))
+    Recorder.processes[0].finish(0)
+    done(state())`)
+  assert.deepEqual(r.started, [Model.saveCommand(150, 900), Model.saveCommand(150, 300)])
+})

@@ -46,6 +46,13 @@ function indexFor(seconds) {
   return best
 }
 
+// True when `seconds` is the stop `current` already shows at, so releasing
+// the slider there changes nothing. Off (0) shows at the first stop, but a
+// release there turns it on.
+function sameStop(seconds, current) {
+  return current > 0 && seconds === STOPS[indexFor(current)]
+}
+
 function label(seconds) {
   if (seconds === 0) return "Off"
   if (seconds < 60) return seconds + " s"
@@ -103,6 +110,7 @@ if (typeof module !== "undefined") {
     screensaverSeconds: screensaverSeconds,
     lockSeconds: lockSeconds,
     indexFor: indexFor,
+    sameStop: sameStop,
     label: label,
     withScreensaver: withScreensaver,
     withLock: withLock,
