@@ -7,9 +7,10 @@ import "Model.js" as Model
 
 // Bar icon with a popup holding two sliders: screensaver and lock timeouts.
 // Values are read from and written to idle.screensaver / idle.lock in
-// shell.json. Third-party widgets get no shellConfig or idle mutator in
-// Omarchy 4.0.6, so this reads the file directly and writes it with
-// Omarchy's own omarchy-shell-config helper, which reloads the shell.
+// shell.json. Third-party widgets get no shellConfig or idle mutator
+// (checked on Omarchy 4.0.6 and 4.5.0), so this reads the file directly and
+// writes it with Omarchy's own omarchy-shell-config helper, which reloads
+// the shell config.
 Panel {
   id: root
   moduleName: "io.github.jordi-adame.idle-timer"
