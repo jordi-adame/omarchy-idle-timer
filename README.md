@@ -31,6 +31,7 @@ Releasing a slider writes `idle.screensaver` and `idle.lock` (seconds) in
 helper (jq, temp file, rename, shell config reload). Other keys are kept.
 Then it restarts Omarchy's idle service (`omarchy-shell idle disable`, then
 `enable`), because a running idle monitor does not pick up a new timeout.
+While Stay Awake is on there is no restart, so Stay Awake stays on.
 
 Nothing is written when the widget loads or the popup opens, and nothing else
 is read or written. No network.

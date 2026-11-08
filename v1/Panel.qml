@@ -65,7 +65,8 @@ Panel {
   }
 
   // Workaround for IdleMonitor not re-arming after a timeout change: restart
-  // the idle service once the write has landed (Model.RESTART_COMMAND).
+  // the idle service once the write has landed, unless Stay Awake is on
+  // (Model.RESTART_COMMAND).
   Timer {
     id: rearmTimer
     interval: 300

@@ -69,8 +69,12 @@ function saveCommand(screensaver, lock) {
 
 // Changing IdleMonitor.timeout on a live shell leaves the monitor never
 // reporting idle again. Toggling the idle service off and on recreates the
-// Wayland idle notification with the new timeout.
-var RESTART_COMMAND = ["bash", "-c", "omarchy-shell idle disable; omarchy-shell idle enable"]
+// Wayland idle notification with the new timeout. `idle disable` / `enable`
+// are also Omarchy's persisted Stay Awake toggle, so the restart runs only
+// while idle is on. With Stay Awake on, the monitor is disabled and is
+// enabled again when Stay Awake ends.
+var RESTART_COMMAND = ["bash", "-c",
+  "omarchy-shell idle status | jq -e '.enabled == true' >/dev/null || exit 0; omarchy-shell idle disable; omarchy-shell idle enable"]
 
 if (typeof module !== "undefined") {
   module.exports = {

@@ -123,6 +123,7 @@ test("saveCommand: the script text never changes with the values", () => {
   }
 })
 
-test("restart command: the idle service is toggled off and on, nothing else", () => {
-  assert.deepEqual(Model.RESTART_COMMAND, ["bash", "-c", "omarchy-shell idle disable; omarchy-shell idle enable"])
+test("restart command: the idle service is toggled off and on only while idle is on", () => {
+  assert.deepEqual(Model.RESTART_COMMAND, ["bash", "-c",
+    "omarchy-shell idle status | jq -e '.enabled == true' >/dev/null || exit 0; omarchy-shell idle disable; omarchy-shell idle enable"])
 })
