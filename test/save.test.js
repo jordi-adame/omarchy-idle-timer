@@ -1,7 +1,8 @@
 // The save script, run for real under bash and jq against a fake
 // omarchy-shell-config (first on PATH) whose commit() writes jq's output to a
 // file in a temp dir. The real helper is never sourced, so neither the user's
-// shell.json nor the running shell is touched.
+// shell.json nor the running shell is touched; its NORMALIZE is copied as
+// text for one test when Omarchy is installed.
 const test = require("node:test")
 const assert = require("node:assert/strict")
 const fs = require("node:fs")
@@ -21,11 +22,17 @@ commit() {
 }
 `
 
-function save(config, screensaver, lock) {
+// Omarchy's own NORMALIZE, copied as text out of the installed helper (never
+// sourced: its commit reloads the running shell). null when not installed.
+const HELPER = ["/usr/share/omarchy/bin/omarchy-shell-config", process.env.OMARCHY_PATH && path.join(process.env.OMARCHY_PATH, "bin", "omarchy-shell-config")]
+  .find((p) => p && fs.existsSync(p))
+const REAL_NORMALIZE = HELPER ? (fs.readFileSync(HELPER, "utf8").match(/^NORMALIZE='[^']*'$/m) || [null])[0] : null
+
+function save(config, screensaver, lock, normalize = "NORMALIZE='.'") {
   const dir = tmpdir("save")
   const bin = path.join(dir, "bin")
   fs.mkdirSync(bin)
-  fs.writeFileSync(path.join(bin, "omarchy-shell-config"), FAKE)
+  fs.writeFileSync(path.join(bin, "omarchy-shell-config"), FAKE.replace("NORMALIZE='.'", normalize))
   const file = path.join(dir, "shell.json")
   fs.writeFileSync(file, JSON.stringify(config))
   const [cmd, ...args] = Model.saveCommand(screensaver, lock)
@@ -53,4 +60,11 @@ test("save: values are data for jq, never shell or jq code", { skip: !hasJq && "
   assert.notEqual(res.status, 0, "jq rejects a value that is not JSON")
   assert.equal(out, null, "nothing written")
   assert.equal(fs.existsSync(path.join(dir, "pwned")), false, "no command substitution")
+})
+
+test("save: composes with Omarchy's own NORMALIZE", { skip: (!hasJq && "jq not installed") || (!REAL_NORMALIZE && "Omarchy not installed") }, () => {
+  const { res, out } = save({ idle: { screensaver: 60 }, bar: {} }, 150, 300, REAL_NORMALIZE)
+  assert.equal(res.status, 0, res.stderr)
+  assert.deepEqual(out.idle, { screensaver: 150, lock: 300 })
+  assert.equal(out.version, 1, "normalized")
 })
