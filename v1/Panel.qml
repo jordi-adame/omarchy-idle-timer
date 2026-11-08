@@ -11,8 +11,8 @@ import qs.Ui
 // Omarchy's own omarchy-shell-config helper, which reloads the shell.
 Panel {
   id: root
-  moduleName: "jordi-adame.idle-timer"
-  ipcTarget: "jordi-adame.idle-timer"
+  moduleName: "io.github.jordi-adame.idle-timer"
+  ipcTarget: "io.github.jordi-adame.idle-timer"
   // Own the IpcHandler so it can also expose set().
   manageIpc: false
 
@@ -106,7 +106,7 @@ Panel {
   }
 
   IpcHandler {
-    target: "jordi-adame.idle-timer"
+    target: "io.github.jordi-adame.idle-timer"
 
     function open(): void { root.open() }
     function close(): void { root.close() }
