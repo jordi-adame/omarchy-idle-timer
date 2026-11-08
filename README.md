@@ -6,8 +6,8 @@ sliders, one for the screensaver timeout and one for the lock timeout.
 ![The popup: screensaver 2 min 30 s, lock 5 min](preview.png)
 
 Drag a slider to preview the value; release it to save. A release where the
-slider already was saves nothing. The stops run from
-15 s to 60 min: 15, 30, 45 s, 1, 1.5, 2, 2.5, 3, 5, 10, 15, 20, 30, 45 and 60 min.
+slider already was saves nothing. The stops run from 15 s to 60 min: 15, 30,
+45 s, 1, 1.5, 2, 2.5, 3, 5, 10, 15, 20, 30, 45 and 60 min.
 The icon's tooltip shows both values. Esc closes the popup.
 
 ## Requirements
@@ -59,7 +59,8 @@ omarchy-shell io.github.jordi-adame.idle-timer set 300 600   # screensaver, lock
 
 - Only the stops above. A value between stops, set by hand, shows at the
   nearest stop, and is kept until you move that slider.
-- Each save restarts the idle service, which starts the idle countdown again.
+- Each save restarts the idle service (not while Stay Awake is on), which
+  starts the idle countdown again.
 - A release while a save is still running is saved after it; only the last
   one is kept. A failed save drops it too.
 - English only.
