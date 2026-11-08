@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "jordi-adame.idle-timer",
+  "name": "Idle timer",
+  "version": "1.0.0",
+  "author": "Jordi Adame",
+  "description": "Set screensaver and lock timeouts from the bar.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "v1/Panel.qml"
+  },
+  "barWidget": {
+    "displayName": "Idle timer",
+    "description": "Sliders for idle.screensaver and idle.lock in shell.json.",
+    "category": "System",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
