@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import qs.Commons
 import qs.Ui
+import "Model.js" as Model
 
 // Bar icon with a popup holding two sliders: screensaver and lock timeouts.
 // Values are read from and written to idle.screensaver / idle.lock in
@@ -16,13 +17,13 @@ Panel {
   // Own the IpcHandler so it can also expose set().
   manageIpc: false
 
-  // Slider positions map to these seconds; finer near the low end.
-  readonly property var stops: [15, 30, 45, 60, 90, 120, 150, 180, 300, 600, 900, 1200, 1800, 2700, 3600]
+  // Slider positions map to these seconds (Model.STOPS).
+  readonly property var stops: Model.STOPS
 
   // Omarchy's defaults when shell.json has no idle block (idle service fallbacks).
   property var idleConfig: ({})
-  readonly property int screensaverSeconds: Number(idleConfig.screensaver) > 0 ? Number(idleConfig.screensaver) : 150
-  readonly property int lockSeconds: Number(idleConfig.lock) > 0 ? Number(idleConfig.lock) : 300
+  readonly property int screensaverSeconds: Model.screensaverSeconds(idleConfig)
+  readonly property int lockSeconds: Model.lockSeconds(idleConfig)
 
   // Slider values held until shell.json reloads (or the write fails), so the
   // knob doesn't jump back to the old value in between.
@@ -36,38 +37,19 @@ Panel {
     printErrors: false
     onFileChanged: reload()
     onLoaded: {
-      try {
-        var config = JSON.parse(text())
-        root.idleConfig = config && config.idle && typeof config.idle === "object" ? config.idle : ({})
-      } catch (e) {
-        root.idleConfig = ({})
-      }
+      root.idleConfig = Model.parseIdle(text())
       root.previewScreensaver = -1
       root.previewLock = -1
     }
     onLoadFailed: function(error) { root.idleConfig = ({}) }
   }
 
-  function indexFor(seconds) {
-    var best = 0
-    for (var i = 0; i < stops.length; i++) {
-      if (Math.abs(stops[i] - seconds) < Math.abs(stops[best] - seconds)) best = i
-    }
-    return best
-  }
+  function indexFor(seconds) { return Model.indexFor(seconds) }
+  function label(seconds) { return Model.label(seconds) }
 
-  function label(seconds) {
-    if (seconds < 60) return seconds + " s"
-    if (seconds % 60 === 0) return (seconds / 60) + " min"
-    return Math.floor(seconds / 60) + " min " + (seconds % 60) + " s"
-  }
-
-  // Keep lock >= screensaver so the screensaver always shows first.
   function save(screensaver, lock) {
     if (saveProcess.running) return
-    saveProcess.command = ["bash", "-c",
-      "source omarchy-shell-config && commit \"$NORMALIZE | .idle = ((.idle | if type == \\\"object\\\" then . else {} end) + {screensaver: \\$s, lock: \\$l})\" --argjson s \"$1\" --argjson l \"$2\"",
-      "_", String(screensaver), String(lock)]
+    saveProcess.command = Model.saveCommand(screensaver, lock)
     saveProcess.running = true
   }
 
@@ -82,28 +64,23 @@ Panel {
     }
   }
 
-  // Workaround: changing IdleMonitor.timeout on a live shell leaves the
-  // monitor never reporting idle again. Toggling the idle service off and on
-  // recreates the Wayland idle notification with the new timeout.
+  // Workaround for IdleMonitor not re-arming after a timeout change: restart
+  // the idle service once the write has landed (Model.RESTART_COMMAND).
   Timer {
     id: rearmTimer
     interval: 300
-    onTriggered: Quickshell.execDetached(["bash", "-c", "omarchy-shell idle disable; omarchy-shell idle enable"])
+    onTriggered: Quickshell.execDetached(Model.RESTART_COMMAND)
   }
 
-  function setScreensaver(seconds) {
-    var lock = Math.max(seconds, lockSeconds)
-    previewScreensaver = seconds
-    previewLock = lock
-    save(seconds, lock)
+  // Keep lock >= screensaver so the screensaver always shows first.
+  function applyValues(values) {
+    previewScreensaver = values.screensaver
+    previewLock = values.lock
+    save(values.screensaver, values.lock)
   }
 
-  function setLock(seconds) {
-    var screensaver = Math.min(screensaverSeconds, seconds)
-    previewScreensaver = screensaver
-    previewLock = seconds
-    save(screensaver, seconds)
-  }
+  function setScreensaver(seconds) { applyValues(Model.withScreensaver(seconds, lockSeconds)) }
+  function setLock(seconds) { applyValues(Model.withLock(seconds, screensaverSeconds)) }
 
   IpcHandler {
     target: "io.github.jordi-adame.idle-timer"
