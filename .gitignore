@@ -1,0 +1,6 @@
+# Node
+node_modules/
+
+# Scratch files from local test and preview runs (TMPDIR=.scratch)
+.scratch/
+*.log
