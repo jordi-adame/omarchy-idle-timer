@@ -1,7 +1,7 @@
 {
   "name": "omarchy-idle-timer",
   "private": true,
-  "description": "Omarchy bar plugin: set the screensaver and lock timeouts from the bar",
+  "description": "Omarchy bar plugin: set the screensaver and lock timeouts from the bar, or start either now",
   "license": "MIT",
   "scripts": {
     "test": "node --test"

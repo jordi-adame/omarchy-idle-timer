@@ -9,5 +9,6 @@ QtObject {
   property var started: []
   property var detached: []
   property var sliders: []
+  property var buttons: []
   property Item card: null
 }

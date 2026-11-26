@@ -1,5 +1,6 @@
 // Idle timer model: slider stops, labels, the lock >= screensaver rule, the
-// shell.json reader and the save command. Plain JS so Node tests can load it
+// shell.json reader, the save command, and the two actions (screensaver now,
+// lock now). Plain JS so Node tests can load it
 // (module.exports at the bottom) and QML can import it.
 
 // Slider positions map to these seconds; finer near the low end.
@@ -98,6 +99,14 @@ function saveCommand(screensaver, lock) {
 var RESTART_COMMAND = ["bash", "-c",
   "omarchy-shell idle status | jq -e '.enabled == true' >/dev/null || exit 0; omarchy-shell idle disable; omarchy-shell idle enable"]
 
+// The two buttons. Each runs one of Omarchy's public commands, so it works
+// with the built-in idle and lock services and with replacements. `force`
+// starts the screensaver even when it is toggled off, as Omarchy's menu does.
+var ACTIONS = {
+  screensaver: { label: "Screensaver", command: ["omarchy-launch-screensaver", "force"] },
+  lock: { label: "Lock", command: ["omarchy-system-lock"] }
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
     STOPS: STOPS,
@@ -115,6 +124,7 @@ if (typeof module !== "undefined") {
     withScreensaver: withScreensaver,
     withLock: withLock,
     forSet: forSet,
-    saveCommand: saveCommand
+    saveCommand: saveCommand,
+    ACTIONS: ACTIONS
   }
 }

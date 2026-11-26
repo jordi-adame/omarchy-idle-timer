@@ -11,10 +11,13 @@ QtObject {
     readonly property string family: "monospace"
     readonly property int caption: 10
     readonly property int bodySmall: 11
+    readonly property int body: 12
   }
   readonly property QtObject spacing: QtObject {
     readonly property int md: 6
     readonly property int controlHeight: 28
+    readonly property int controlPaddingX: 10
+    readonly property int controlPaddingY: 6
     readonly property int popupPadding: 14
   }
 }
