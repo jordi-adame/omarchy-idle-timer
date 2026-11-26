@@ -164,11 +164,20 @@ function shortcutText(bind) {
   return key === "" ? "" : modifierNames(bind.modmask).concat([key]).join(" + ")
 }
 
+// True when an exec bind runs the command `name`: the word starts the line
+// or a ; & | ( part of it, or follows a launcher word, so a bind that only
+// names the command as an argument (pkill -f <name>) is no shortcut.
+var LAUNCHER_WORDS = ["--", "-c", "exec", "setsid", "nohup", "app"]
+
 function runsCommand(bind, name) {
   if (bind.dispatcher !== "exec" || typeof bind.arg !== "string") return false
-  var words = bind.arg.split(/[\s;&|()]+/)
-  for (var i = 0; i < words.length; i++) {
-    if (words[i] === name || words[i].slice(-name.length - 1) === "/" + name) return true
+  var parts = bind.arg.replace(/["']/g, " ").split(/[;&|()]+/)
+  for (var p = 0; p < parts.length; p++) {
+    var words = parts[p].trim().split(/\s+/)
+    for (var i = 0; i < words.length; i++) {
+      var isName = words[i] === name || words[i].slice(-name.length - 1) === "/" + name
+      if (isName && (i === 0 || LAUNCHER_WORDS.indexOf(words[i - 1]) >= 0)) return true
+    }
   }
   return false
 }

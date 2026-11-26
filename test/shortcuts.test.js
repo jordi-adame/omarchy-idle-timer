@@ -62,6 +62,18 @@ test("shortcutsFor: an exec bind that runs the command matches; one that only me
   assert.equal(Model.matchesAction({ dispatcher: "__lua", arg: "omarchy-system-lock" }, lock), false)
 })
 
+test("shortcutsFor: the command must be what the exec bind runs, not an argument", () => {
+  const exec = (arg) => Model.matchesAction({ dispatcher: "exec", arg }, lock)
+  for (const arg of ["uwsm app -- omarchy-system-lock", "uwsm-app -- omarchy-system-lock", "bash -c \"omarchy-system-lock\"",
+    "bash -c 'sleep 1 && omarchy-system-lock'", "setsid omarchy-system-lock", "(omarchy-system-lock)"]) {
+    assert.equal(exec(arg), true, arg)
+  }
+  for (const arg of ["pkill -f omarchy-system-lock", "omarchy-cmd-present omarchy-system-lock && notify-send hi",
+    "notify-send 'omarchy-system-lock'", ""]) {
+    assert.equal(exec(arg), false, arg)
+  }
+})
+
 test("shortcutsFor: a description match ignores case and outer spaces", () => {
   assert.deepEqual(Model.shortcutsFor([{ modmask: 64, key: "F1", description: " lock SYSTEM " }], lock), ["Super + F1"])
   assert.deepEqual(Model.shortcutsFor([{ modmask: 64, key: "F2", description: "Screensaver" }], screensaver), ["Super + F2"])
