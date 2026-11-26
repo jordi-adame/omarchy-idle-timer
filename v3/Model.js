@@ -1,6 +1,6 @@
 // Idle timer model: slider stops, labels, the lock >= screensaver rule, the
-// shell.json reader, the save command, the two actions (screensaver now,
-// lock now) and their keyboard shortcuts from `hyprctl binds -j`. Plain JS so Node tests can load it
+// shell.json reader, the save command, and the two actions (screensaver now,
+// lock now). Plain JS so Node tests can load it
 // (module.exports at the bottom) and QML can import it.
 
 // Slider positions map to these seconds; finer near the low end.
@@ -102,114 +102,9 @@ var RESTART_COMMAND = ["bash", "-c",
 // The two buttons. Each runs one of Omarchy's public commands, so it works
 // with the built-in idle and lock services and with replacements. `force`
 // starts the screensaver even when it is toggled off, as Omarchy's menu does.
-// A keyboard shortcut is a Hyprland bind whose description is one of
-// `descriptions` (Lua-config binds show only a description), or an exec bind
-// that runs the command.
 var ACTIONS = {
-  screensaver: {
-    label: "Screensaver",
-    hint: "Start screensaver",
-    command: ["omarchy-launch-screensaver", "force"],
-    descriptions: ["screensaver", "launch screensaver", "start screensaver"]
-  },
-  lock: {
-    label: "Lock",
-    hint: "Lock screen",
-    command: ["omarchy-system-lock"],
-    descriptions: ["lock system"]
-  }
-}
-
-// Read-only: the user's own Hyprland binds, read when the popup opens.
-var BINDS_COMMAND = ["hyprctl", "binds", "-j"]
-
-// The bind list from `hyprctl binds -j` output; null when it is not a JSON
-// array (hyprctl missing or failing), so "no shortcut" is never claimed
-// without having read the binds.
-function parseBinds(text) {
-  try {
-    var binds = JSON.parse(text)
-    return Array.isArray(binds) ? binds : null
-  } catch (e) {
-    return null
-  }
-}
-
-// Hyprland's modmask bits, in the order shortcuts are usually written.
-var MODIFIERS = [
-  [64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"],
-  [2, "Caps"], [16, "Mod2"], [32, "Mod3"], [128, "Mod5"]
-]
-
-function modifierNames(modmask) {
-  var mask = Number(modmask) || 0
-  var names = []
-  for (var i = 0; i < MODIFIERS.length; i++) {
-    if (mask & MODIFIERS[i][0]) names.push(MODIFIERS[i][1])
-  }
-  return names
-}
-
-// The key of a bind: "L", "Return", "code:201" for a keycode bind; "" when
-// the bind names no key.
-function keyName(bind) {
-  var key = typeof bind.key === "string" ? bind.key.trim() : ""
-  if (key === "") return Number(bind.keycode) > 0 ? "code:" + Number(bind.keycode) : ""
-  return key.charAt(0).toUpperCase() + key.slice(1)
-}
-
-// "Super + Ctrl + L"; "" when the bind names no key.
-function shortcutText(bind) {
-  var key = keyName(bind)
-  return key === "" ? "" : modifierNames(bind.modmask).concat([key]).join(" + ")
-}
-
-// True when an exec bind runs the command `name`: the word starts the line
-// or a ; & | ( part of it, or follows a launcher word, so a bind that only
-// names the command as an argument (pkill -f <name>) is no shortcut.
-var LAUNCHER_WORDS = ["--", "-c", "exec", "setsid", "nohup", "app"]
-
-function runsCommand(bind, name) {
-  if (bind.dispatcher !== "exec" || typeof bind.arg !== "string") return false
-  var parts = bind.arg.replace(/["']/g, " ").split(/[;&|()]+/)
-  for (var p = 0; p < parts.length; p++) {
-    var words = parts[p].trim().split(/\s+/)
-    for (var i = 0; i < words.length; i++) {
-      var isName = words[i] === name || words[i].slice(-name.length - 1) === "/" + name
-      if (isName && (i === 0 || LAUNCHER_WORDS.indexOf(words[i - 1]) >= 0)) return true
-    }
-  }
-  return false
-}
-
-function matchesAction(bind, action) {
-  if (!bind || typeof bind !== "object") return false
-  // A mouse bind is not a keyboard shortcut.
-  if (bind.mouse === true || (typeof bind.key === "string" && /^mouse/i.test(bind.key.trim()))) return false
-  // A bind inside a submap needs another key first.
-  if (typeof bind.submap === "string" && bind.submap !== "") return false
-  var description = typeof bind.description === "string" ? bind.description.trim().toLowerCase() : ""
-  return action.descriptions.indexOf(description) >= 0 || runsCommand(bind, action.command[0])
-}
-
-// Every shortcut bound to the action, in bind order, each once.
-function shortcutsFor(binds, action) {
-  var found = []
-  for (var i = 0; i < (binds ? binds.length : 0); i++) {
-    if (!matchesAction(binds[i], action)) continue
-    var text = shortcutText(binds[i])
-    if (text !== "" && found.indexOf(text) < 0) found.push(text)
-  }
-  return found
-}
-
-// The button's tooltip: "Lock screen: Super + Ctrl + L or Super + Ctrl + Q",
-// "Lock screen: no keyboard shortcut" when the binds have none, and the hint
-// alone when the binds could not be read (null).
-function actionTooltip(action, binds) {
-  if (!binds) return action.hint
-  var shortcuts = shortcutsFor(binds, action)
-  return action.hint + ": " + (shortcuts.length ? shortcuts.join(" or ") : "no keyboard shortcut")
+  screensaver: { label: "Screensaver", command: ["omarchy-launch-screensaver", "force"] },
+  lock: { label: "Lock", command: ["omarchy-system-lock"] }
 }
 
 if (typeof module !== "undefined") {
@@ -230,14 +125,6 @@ if (typeof module !== "undefined") {
     withLock: withLock,
     forSet: forSet,
     saveCommand: saveCommand,
-    ACTIONS: ACTIONS,
-    BINDS_COMMAND: BINDS_COMMAND,
-    parseBinds: parseBinds,
-    modifierNames: modifierNames,
-    keyName: keyName,
-    shortcutText: shortcutText,
-    matchesAction: matchesAction,
-    shortcutsFor: shortcutsFor,
-    actionTooltip: actionTooltip
+    ACTIONS: ACTIONS
   }
 }

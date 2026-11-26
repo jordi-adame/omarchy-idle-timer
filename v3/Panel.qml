@@ -101,30 +101,11 @@ Panel {
     else applyValues(Model.withLock(seconds, screensaverSeconds))
   }
 
-  // The user's Hyprland binds, read each time the popup opens and never
-  // polled; null until that open's read ends, or when hyprctl gives no bind
-  // list, so a tooltip never shows the binds of an earlier open.
-  property var binds: null
-
   // Cursor over the buttons, moved by the keys and by the pointer: -1 none,
   // 0 Screensaver, 1 Lock.
   property int actionCursor: -1
 
-  onOpenedChanged: {
-    if (!opened) return
-    actionCursor = -1
-    binds = null
-    if (!bindsProcess.running) bindsProcess.running = true
-  }
-
-  Process {
-    id: bindsProcess
-    command: Model.BINDS_COMMAND
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: root.binds = Model.parseBinds(text)
-    }
-  }
+  onOpenedChanged: if (opened) actionCursor = -1
 
   // Close the popup first, then hand Omarchy's own command to the shell.
   function runAction(action) {
@@ -230,14 +211,13 @@ Panel {
     }
   }
 
-  // Runs its action now; hovering shows the action's keyboard shortcut.
+  // Runs its action now.
   component ActionButton: Button {
     property var action: null
     property int cursorIndex: -1
 
     width: (actions.width - actions.spacing) / 2
     text: action.label
-    tooltipText: Model.actionTooltip(action, root.binds)
     bordered: true
     foreground: root.bar.foreground
     fontFamily: root.bar.fontFamily

@@ -13,10 +13,7 @@ The icon's tooltip shows both values. Esc closes the popup.
 
 **Screensaver** and **Lock** close the popup, then run Omarchy's
 `omarchy-launch-screensaver force` or `omarchy-system-lock`. Arrow keys move
-over them; Enter presses. Hovering one shows its keyboard shortcut, read from
-your Hyprland binds (`hyprctl binds -j`) when the popup opens: a bind described
-"Lock system" (or "Screensaver"), or an `exec` bind that runs the command.
-With no such bind, it says there is no shortcut.
+over them; Enter presses.
 
 ## Requirements
 

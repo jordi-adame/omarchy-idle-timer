@@ -173,3 +173,8 @@ test("sameStop: a release on the stop the value already shows at is no change", 
   assert.equal(Model.sameStop(600, 400), false)
   assert.equal(Model.sameStop(15, 0), false, "off shows at the first stop; a release there turns it on")
 })
+
+test("actions: each button runs one public Omarchy command, as an argv array", () => {
+  assert.deepEqual(Model.ACTIONS.screensaver, { label: "Screensaver", command: ["omarchy-launch-screensaver", "force"] })
+  assert.deepEqual(Model.ACTIONS.lock, { label: "Lock", command: ["omarchy-system-lock"] })
+})

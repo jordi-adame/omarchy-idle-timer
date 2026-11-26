@@ -7,7 +7,6 @@ import Stub
 Rectangle {
   id: root
   property string text: ""
-  property string tooltipText: ""
   property bool hasCursor: false
   property bool bordered: false
   property color foreground: "#cdd6f4"

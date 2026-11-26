@@ -9,7 +9,7 @@
     "bar-widget"
   ],
   "entryPoints": {
-    "barWidget": "v2/Panel.qml"
+    "barWidget": "v3/Panel.qml"
   },
   "barWidget": {
     "displayName": "Idle timer",

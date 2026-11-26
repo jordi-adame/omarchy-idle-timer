@@ -18,17 +18,8 @@ function label(title) {
   var row = slider(title).parent
   return row.children[0].children[1].text
 }
-// The Process that writes shell.json, and the one that reads the binds.
-function saveProcess() {
-  for (var i = 0; i < Recorder.processes.length; i++)
-    if (!Recorder.processes[i].stdout) return Recorder.processes[i]
-  throw new Error("no save process")
-}
-function bindsProcess() {
-  for (var i = 0; i < Recorder.processes.length; i++)
-    if (Recorder.processes[i].stdout) return Recorder.processes[i]
-  throw new Error("no binds process")
-}
+// The Process that writes shell.json.
+function saveProcess() { return Recorder.processes[0] }
 function button(text) {
   for (var i = 0; i < Recorder.buttons.length; i++)
     if (Recorder.buttons[i].text === text) return Recorder.buttons[i]
@@ -42,8 +33,7 @@ function state() {
     sliders: { SCREENSAVER: slider("SCREENSAVER").value, LOCK: slider("LOCK").value },
     labels: { SCREENSAVER: label("SCREENSAVER"), LOCK: label("LOCK") },
     started: Recorder.started, detached: Recorder.detached,
-    opened: panel.opened, cursor: panel.actionCursor,
-    tooltips: { Screensaver: button("Screensaver").tooltipText, Lock: button("Lock").tooltipText }
+    opened: panel.opened, cursor: panel.actionCursor
   }
 }
 `
@@ -69,22 +59,17 @@ test("panel: no shell.json, no idle block, a partial block and bad JSON read as 
   }
 })
 
-test("consent: loading writes, reads and runs nothing", { skip }, () => {
-  const r = run(json({ screensaver: 60, lock: 30 }), "after(400, function () { done(state()) })")
-  assert.deepEqual(r.started, [])
-  assert.deepEqual(r.detached, [])
-})
-
-test("consent: opening the popup only reads the binds; it writes nothing and restarts nothing", { skip }, () => {
+test("consent: loading and opening the popup write nothing and run nothing", { skip }, () => {
   const r = run(json({ screensaver: 60, lock: 30 }), `
+    var processes = Recorder.processes.length
     panel.open()
     after(400, function () {
-      bindsProcess().finish(0, "[]")
       panel.close(); panel.toggle()
-      after(400, function () { done(state()) })
+      after(400, function () { var s = state(); s.processes = processes; done(s) })
     })`)
-  assert.deepEqual(r.started, [Model.BINDS_COMMAND, Model.BINDS_COMMAND], "one read per open")
+  assert.deepEqual(r.started, [])
   assert.deepEqual(r.detached, [])
+  assert.equal(r.processes, 1, "the save is the only Process")
 })
 
 test("consent: dragging a slider previews only; release writes", { skip }, () => {
@@ -218,8 +203,6 @@ test("save: a release back to the saved value while a write runs is still writte
   assert.deepEqual(r.started, [Model.saveCommand(150, 900), Model.saveCommand(150, 300)])
 })
 
-const BINDS = require("node:fs").readFileSync(require("node:path").join(__dirname, "fixtures", "binds.json"), "utf8")
-
 test("buttons: Screensaver and Lock sit under the sliders", { skip }, () => {
   const r = run(json({ screensaver: 150, lock: 300 }), `
     panel.open()
@@ -244,7 +227,7 @@ test("buttons: Screensaver closes the popup, then runs omarchy-launch-screensave
   assert.deepEqual(r.before.detached, [])
   assert.equal(r.after.opened, false)
   assert.deepEqual(r.after.detached, [["omarchy-launch-screensaver", "force"]])
-  assert.deepEqual(r.after.started, [Model.BINDS_COMMAND], "no write, no restart")
+  assert.deepEqual(r.after.started, [], "no write, no restart")
 })
 
 test("buttons: Lock closes the popup, then runs omarchy-system-lock", { skip }, () => {
@@ -254,7 +237,7 @@ test("buttons: Lock closes the popup, then runs omarchy-system-lock", { skip }, 
     after(400, function () { done(state()) })`)
   assert.equal(r.opened, false)
   assert.deepEqual(r.detached, [["omarchy-system-lock"]])
-  assert.deepEqual(r.started, [Model.BINDS_COMMAND])
+  assert.deepEqual(r.started, [])
 })
 
 test("buttons: the popup is already closed when the command is handed over", { skip }, () => {
@@ -274,44 +257,6 @@ test("buttons: a click leaves the timeouts alone", { skip }, () => {
     button("Lock").clicked()
     after(400, function () { done(state()) })`)
   assert.deepEqual([r.screensaver, r.lock, r.previewScreensaver, r.previewLock], [150, 300, -1, -1])
-})
-
-test("tooltip: the shortcuts come from the binds read when the popup opens", { skip }, () => {
-  const r = run(json({ screensaver: 150, lock: 300 }), `
-    var loaded = state()
-    panel.open()
-    var reading = state()
-    bindsProcess().finish(0, ${JSON.stringify(BINDS)})
-    done({ loaded: loaded, reading: reading, read: state() })`)
-  assert.deepEqual(r.loaded.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
-  assert.deepEqual(r.reading.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
-  assert.deepEqual(r.read.tooltips, {
-    Screensaver: "Start screensaver: Super + Ctrl + Alt + Shift + S",
-    Lock: "Lock screen: Super + Shift + F9 or Ctrl + Alt + DELETE or code:201"
-  })
-})
-
-test("tooltip: with no bind it says there is no shortcut", { skip }, () => {
-  const r = run(json({ screensaver: 150, lock: 300 }), `
-    panel.open()
-    bindsProcess().finish(0, "[]")
-    done(state())`)
-  assert.deepEqual(r.tooltips, { Screensaver: "Start screensaver: no keyboard shortcut", Lock: "Lock screen: no keyboard shortcut" })
-})
-
-test("tooltip: a failed read names the action only, and the next open reads again", { skip }, () => {
-  const r = run(json({ screensaver: 150, lock: 300 }), `
-    panel.open()
-    bindsProcess().finish(0, ${JSON.stringify(BINDS)})
-    panel.close(); panel.open()
-    bindsProcess().finish(1, "")
-    var failed = state()
-    panel.close(); panel.open()
-    bindsProcess().finish(0, "[]")
-    done({ failed: failed, again: state() })`)
-  assert.deepEqual(r.failed.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
-  assert.equal(r.again.tooltips.Lock, "Lock screen: no keyboard shortcut")
-  assert.equal(r.again.started.length, 3)
 })
 
 test("keyboard: arrows move a cursor over the buttons and Enter presses the one under it", { skip }, () => {
@@ -348,15 +293,6 @@ test("keyboard: Left or Up from no cursor lands on Lock", { skip }, () => {
     keys.moveRequested(-1, 0)
     done(state())`)
   assert.equal(r.cursor, 1)
-})
-
-test("tooltip: a new open drops the binds of the last one until its own read ends", { skip }, () => {
-  const r = run(json({ screensaver: 150, lock: 300 }), `
-    panel.open()
-    bindsProcess().finish(0, ${JSON.stringify(BINDS)})
-    panel.close(); panel.open()
-    done(state())`)
-  assert.deepEqual(r.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
 })
 
 test("keyboard: the pointer moves the same cursor, so Enter presses the button it is on", { skip }, () => {
