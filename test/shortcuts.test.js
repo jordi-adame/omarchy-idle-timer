@@ -99,3 +99,11 @@ test("actionTooltip: binds that could not be read give the action alone", () => 
   assert.equal(Model.actionTooltip(lock, null), "Lock screen")
   assert.equal(Model.actionTooltip(screensaver, Model.parseBinds("")), "Start screensaver")
 })
+
+test("shortcutsFor: mouse binds are not keyboard shortcuts", () => {
+  assert.deepEqual(Model.shortcutsFor([
+    { modmask: 64, key: "mouse:272", description: "Lock system" },
+    { modmask: 64, key: "mouse_down", description: "Lock system" },
+    { modmask: 64, key: "M", mouse: true, description: "Lock system" }
+  ], lock), [])
+})

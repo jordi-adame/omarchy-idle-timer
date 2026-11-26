@@ -184,6 +184,8 @@ function runsCommand(bind, name) {
 
 function matchesAction(bind, action) {
   if (!bind || typeof bind !== "object") return false
+  // A mouse bind is not a keyboard shortcut.
+  if (bind.mouse === true || (typeof bind.key === "string" && /^mouse/i.test(bind.key.trim()))) return false
   // A bind inside a submap needs another key first.
   if (typeof bind.submap === "string" && bind.submap !== "") return false
   var description = typeof bind.description === "string" ? bind.description.trim().toLowerCase() : ""
