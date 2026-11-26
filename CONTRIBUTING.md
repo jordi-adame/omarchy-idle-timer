@@ -3,7 +3,7 @@
 ## Layout
 
 - `manifest.json`: the Omarchy plugin manifest; `entryPoints.barWidget` names the version folder the shell loads.
-- `v2/`: `Panel.qml` (bar icon, popup, save, idle restart) and `Model.js` (stops, labels, the lock >= screensaver rule, the `shell.json` reader, the save and restart commands).
+- `v2/`: `Panel.qml` (bar icon, popup, save, idle restart, the two buttons) and `Model.js` (stops, labels, the lock >= screensaver rule, the `shell.json` reader, the save and restart commands, the button commands and their shortcuts from `hyprctl binds -j`).
 - `test/`: `node --test` suites; `test/stubs/` stands in for the `Quickshell` and `qs.*` modules so the real `Panel.qml` loads offscreen.
 - `tools/render-preview.js`: renders `preview.png`, Qt offscreen only.
 
@@ -21,8 +21,9 @@ rm -rf .scratch
 Needs Node 20+, `jq` and the Qt `qml` runtime (`qt6-declarative`). The QML
 tests run with `QT_QPA_PLATFORM=offscreen` and stubs that record commands and
 run none, against a fake `HOME`. The save test runs the real save script with
-a fake `omarchy-shell-config`. Nothing touches your `shell.json`, the running
-shell or the idle service.
+a fake `omarchy-shell-config`. The binds come from `test/fixtures/binds.json`.
+Nothing touches your `shell.json`, the running shell or the idle service, and
+nothing locks or starts the screensaver.
 
 ## A QML change goes in a new version folder
 

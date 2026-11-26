@@ -5,7 +5,8 @@ import qs.Commons
 import qs.Ui
 import "Model.js" as Model
 
-// Bar icon with a popup holding two sliders: screensaver and lock timeouts.
+// Bar icon with a popup holding two sliders, the screensaver and lock
+// timeouts, and two buttons that start the screensaver or lock now.
 // Values are read from and written to idle.screensaver / idle.lock in
 // shell.json. Third-party widgets get no shellConfig or idle mutator
 // (checked on Omarchy 4.0.6 and 4.5.0), so this reads the file directly and
@@ -100,6 +101,44 @@ Panel {
     else applyValues(Model.withLock(seconds, screensaverSeconds))
   }
 
+  // The user's Hyprland binds, read each time the popup opens and never
+  // polled; null until read, or when hyprctl gives no bind list.
+  property var binds: null
+
+  // Keyboard cursor over the buttons: -1 none, 0 Screensaver, 1 Lock.
+  property int actionCursor: -1
+
+  onOpenedChanged: {
+    if (!opened) return
+    actionCursor = -1
+    if (!bindsProcess.running) bindsProcess.running = true
+  }
+
+  Process {
+    id: bindsProcess
+    command: Model.BINDS_COMMAND
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.binds = Model.parseBinds(text)
+    }
+  }
+
+  // Close the popup first, then hand Omarchy's own command to the shell.
+  function runAction(action) {
+    close()
+    Quickshell.execDetached(action.command)
+  }
+
+  // Arrows (or h j k l) move over the buttons; Enter or Space presses.
+  function moveActionCursor(step) {
+    if (actionCursor < 0) actionCursor = step > 0 ? 0 : 1
+    else actionCursor = Math.max(0, Math.min(1, actionCursor + step))
+  }
+  function activateActionCursor() {
+    if (actionCursor === 0) runAction(Model.ACTIONS.screensaver)
+    else if (actionCursor === 1) runAction(Model.ACTIONS.lock)
+  }
+
   IpcHandler {
     target: "io.github.jordi-adame.idle-timer"
 
@@ -141,6 +180,8 @@ Panel {
       anchors.fill: parent
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
+      onMoveRequested: function(dx, dy) { root.moveActionCursor(dx !== 0 ? dx : dy) }
+      onActivateRequested: root.activateActionCursor()
 
       Column {
         id: column
@@ -164,8 +205,40 @@ Panel {
           onPreview: function(s) { root.previewLock = s }
           onCommit: function(s) { root.setLock(s) }
         }
+
+        PanelSeparator { foreground: root.bar.foreground }
+
+        Row {
+          id: actions
+          width: parent.width
+          spacing: Style.space(8)
+
+          ActionButton {
+            action: Model.ACTIONS.screensaver
+            hasCursor: root.actionCursor === 0
+          }
+
+          ActionButton {
+            action: Model.ACTIONS.lock
+            hasCursor: root.actionCursor === 1
+          }
+        }
       }
     }
+  }
+
+  // Runs its action now; hovering shows the action's keyboard shortcut.
+  component ActionButton: Button {
+    property var action: null
+
+    width: (actions.width - actions.spacing) / 2
+    text: action.label
+    tooltipText: Model.actionTooltip(action, root.binds)
+    bordered: true
+    foreground: root.bar.foreground
+    fontFamily: root.bar.fontFamily
+    fontSize: Style.font.bodySmall
+    onClicked: root.runAction(action)
   }
 
   component TimeoutRow: Column {

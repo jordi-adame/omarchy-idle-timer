@@ -1,14 +1,22 @@
 # omarchy-idle-timer
 
 An [Omarchy](https://omarchy.org) bar widget: an icon with a popup holding two
-sliders, one for the screensaver timeout and one for the lock timeout.
+sliders, one for the screensaver timeout and one for the lock timeout, and two
+buttons that start the screensaver or lock the screen now.
 
-![The popup: screensaver 2 min 30 s, lock 5 min](preview.png)
+![The popup: screensaver 2 min 30 s, lock 5 min, and the two buttons](preview.png)
 
 Drag a slider to preview the value; release it to save. A release where the
 slider already was saves nothing. The stops run from 15 s to 60 min: 15, 30,
 45 s, 1, 1.5, 2, 2.5, 3, 5, 10, 15, 20, 30, 45 and 60 min.
 The icon's tooltip shows both values. Esc closes the popup.
+
+**Screensaver** and **Lock** close the popup, then run Omarchy's
+`omarchy-launch-screensaver force` or `omarchy-system-lock`. Arrow keys move
+over them; Enter presses. Hovering one shows its keyboard shortcut, read from
+your Hyprland binds (`hyprctl binds -j`) when the popup opens: a bind described
+"Lock system" (or "Screensaver"), or an `exec` bind that runs the command.
+With no such bind, it says there is no shortcut.
 
 ## Requirements
 
@@ -34,8 +42,8 @@ Then it restarts Omarchy's idle service (`omarchy-shell idle disable`, then
 `enable`), because a running idle monitor does not pick up a new timeout.
 While Stay Awake is on there is no restart, so Stay Awake stays on.
 
-Nothing is written when the widget loads or the popup opens, and nothing else
-is read or written. No network.
+Nothing is written when the widget loads or the popup opens; the buttons write
+nothing. Nothing else is read or written. No network.
 
 **Lock is never shorter than screensaver**, so the screensaver always comes
 first: a screensaver above the lock moves the lock up to it, and a lock below
