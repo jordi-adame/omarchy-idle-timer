@@ -3,7 +3,7 @@
 ## Layout
 
 - `manifest.json`: the Omarchy plugin manifest; `entryPoints.barWidget` names the version folder the shell loads.
-- `v1/`: `Panel.qml` (bar icon, popup, save, idle restart) and `Model.js` (stops, labels, the lock >= screensaver rule, the `shell.json` reader, the save and restart commands).
+- `v2/`: `Panel.qml` (bar icon, popup, save, idle restart) and `Model.js` (stops, labels, the lock >= screensaver rule, the `shell.json` reader, the save and restart commands).
 - `test/`: `node --test` suites; `test/stubs/` stands in for the `Quickshell` and `qs.*` modules so the real `Panel.qml` loads offscreen.
 - `tools/render-preview.js`: renders `preview.png`, Qt offscreen only.
 
@@ -13,7 +13,7 @@
 mkdir -p .scratch
 TMPDIR=$PWD/.scratch node --test
 omarchy plugin validate .
-/usr/lib/qt6/bin/qmllint v1/*.qml     # warnings about the qs.* imports are expected
+/usr/lib/qt6/bin/qmllint v2/*.qml     # warnings about the qs.* imports are expected
 TMPDIR=$PWD/.scratch node tools/render-preview.js preview.png
 rm -rf .scratch
 ```
@@ -27,6 +27,6 @@ shell or the idle service.
 ## A QML change goes in a new version folder
 
 The shell loads a changed bar widget only from a fresh subdirectory. A release
-that changes anything under `v1/` copies it to `v2/`, edits there, points
-`entryPoints.barWidget` at `v2/Panel.qml`, bumps `version` and deletes `v1/`,
+that changes anything under `v2/` copies it to `v3/`, edits there, points
+`entryPoints.barWidget` at `v3/Panel.qml`, bumps `version` and deletes `v2/`,
 all in one commit. The tests and tools follow the manifest.
