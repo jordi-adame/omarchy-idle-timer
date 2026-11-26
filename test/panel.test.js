@@ -349,3 +349,12 @@ test("keyboard: Left or Up from no cursor lands on Lock", { skip }, () => {
     done(state())`)
   assert.equal(r.cursor, 1)
 })
+
+test("tooltip: a new open drops the binds of the last one until its own read ends", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 300 }), `
+    panel.open()
+    bindsProcess().finish(0, ${JSON.stringify(BINDS)})
+    panel.close(); panel.open()
+    done(state())`)
+  assert.deepEqual(r.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
+})

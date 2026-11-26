@@ -102,7 +102,8 @@ Panel {
   }
 
   // The user's Hyprland binds, read each time the popup opens and never
-  // polled; null until read, or when hyprctl gives no bind list.
+  // polled; null until that open's read ends, or when hyprctl gives no bind
+  // list, so a tooltip never shows the binds of an earlier open.
   property var binds: null
 
   // Keyboard cursor over the buttons: -1 none, 0 Screensaver, 1 Lock.
@@ -111,6 +112,7 @@ Panel {
   onOpenedChanged: {
     if (!opened) return
     actionCursor = -1
+    binds = null
     if (!bindsProcess.running) bindsProcess.running = true
   }
 
