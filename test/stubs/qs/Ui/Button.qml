@@ -14,6 +14,7 @@ Rectangle {
   property string fontFamily: Style.font.family
   property real fontSize: Style.font.body
   signal clicked()
+  signal hovered(bool isHovered)
 
   implicitWidth: label.implicitWidth + 2 * (Style.spacing.controlPaddingX + 1)
   implicitHeight: label.implicitHeight + 2 * (Style.spacing.controlPaddingY + 1)

@@ -106,7 +106,8 @@ Panel {
   // list, so a tooltip never shows the binds of an earlier open.
   property var binds: null
 
-  // Keyboard cursor over the buttons: -1 none, 0 Screensaver, 1 Lock.
+  // Cursor over the buttons, moved by the keys and by the pointer: -1 none,
+  // 0 Screensaver, 1 Lock.
   property int actionCursor: -1
 
   onOpenedChanged: {
@@ -217,12 +218,12 @@ Panel {
 
           ActionButton {
             action: Model.ACTIONS.screensaver
-            hasCursor: root.actionCursor === 0
+            cursorIndex: 0
           }
 
           ActionButton {
             action: Model.ACTIONS.lock
-            hasCursor: root.actionCursor === 1
+            cursorIndex: 1
           }
         }
       }
@@ -232,6 +233,7 @@ Panel {
   // Runs its action now; hovering shows the action's keyboard shortcut.
   component ActionButton: Button {
     property var action: null
+    property int cursorIndex: -1
 
     width: (actions.width - actions.spacing) / 2
     text: action.label
@@ -240,6 +242,9 @@ Panel {
     foreground: root.bar.foreground
     fontFamily: root.bar.fontFamily
     fontSize: Style.font.bodySmall
+    // One cursor for pointer and keys: Enter presses the highlighted button.
+    hasCursor: root.actionCursor === cursorIndex
+    onHovered: function(isHovered) { if (isHovered) root.actionCursor = cursorIndex }
     onClicked: root.runAction(action)
   }
 

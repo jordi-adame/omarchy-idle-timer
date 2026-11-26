@@ -358,3 +358,19 @@ test("tooltip: a new open drops the binds of the last one until its own read end
     done(state())`)
   assert.deepEqual(r.tooltips, { Screensaver: "Start screensaver", Lock: "Lock screen" })
 })
+
+test("keyboard: the pointer moves the same cursor, so Enter presses the button it is on", { skip }, () => {
+  const r = run(json({ screensaver: 150, lock: 300 }), `
+    var keys = slider("LOCK").parent.parent.parent
+    panel.open()
+    keys.moveRequested(-1, 0)
+    button("Screensaver").hovered(true)
+    var cursors = [button("Screensaver").hasCursor, button("Lock").hasCursor]
+    button("Screensaver").hovered(false)
+    var left = panel.actionCursor
+    keys.activateRequested()
+    done({ cursors: cursors, left: left, detached: Recorder.detached })`)
+  assert.deepEqual(r.cursors, [true, false])
+  assert.equal(r.left, 0)
+  assert.deepEqual(r.detached, [["omarchy-launch-screensaver", "force"]])
+})
